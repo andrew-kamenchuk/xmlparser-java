@@ -1,0 +1,14 @@
+# compiled
+*.class
+*.jar
+
+# mvn build
+/target
+
+# idea
+/.idea
+/*.iml
+
+# test purposes
+Main.java
+items.xml
