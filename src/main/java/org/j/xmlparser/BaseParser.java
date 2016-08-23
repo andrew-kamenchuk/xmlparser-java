@@ -55,7 +55,7 @@ public class BaseParser {
     }
 
     public void addHandler(@NotNull Object handlerObj) {
-        for (Method method : handlerObj.getClass().getDeclaredMethods()) {
+        for (Method method: handlerObj.getClass().getDeclaredMethods()) {
             if (!method.isAnnotationPresent(Handles.class)) {
                 continue;
             }
@@ -142,14 +142,14 @@ public class BaseParser {
 
             assert element.getTagName().equals(name);
 
-            if (null != textContent) {
-                element.appendChild(doc.createTextNode(textContent.toString().trim()));
+            if (null != textContent && 0 == element.getChildNodes().getLength()) {
+                element.setTextContent(textContent.toString().trim());
             }
 
             textContent = null;
 
             if (handlers.containsKey(name)) {
-                for (ElementHandler handler : handlers.get(name)) {
+                for (ElementHandler handler: handlers.get(name)) {
                     executor.execute(() -> {
                         handler.handle(element);
                     });
