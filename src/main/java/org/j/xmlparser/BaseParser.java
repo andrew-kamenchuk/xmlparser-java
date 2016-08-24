@@ -22,29 +22,26 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Executor;
 
 public class BaseParser {
     private final HashMap<String, List<ElementHandler>> handlers = new HashMap<>();
 
-    private Executor executor = (Runnable command) -> {
-        command.run();
-    };
+    private Executor executor = command -> command.run();
 
-    private Executor prevExecutor = executor;
+    public Executor setExecutor(final @NotNull Executor executor) {
+        Objects.requireNonNull(executor);
 
-    public void setExecutor(@NotNull Executor executor) {
-        prevExecutor = this.executor;
+        final Executor prev = this.executor;
         this.executor = executor;
-    }
 
-    public void restoreExecutor() {
-        Executor current = executor;
-        executor = prevExecutor;
-        prevExecutor = current;
+        return prev;
     }
 
     public void addHandler(String tagName, final @NotNull ElementHandler handler) {
+        Objects.requireNonNull(handler);
+
         tagName = tagName.toLowerCase();
 
         if (!handlers.containsKey(tagName)) {
@@ -54,7 +51,7 @@ public class BaseParser {
         handlers.get(tagName).add(handler);
     }
 
-    public void addHandler(@NotNull Object handlerObj) {
+    public void addHandler(final @NotNull Object handlerObj) {
         for (Method method: handlerObj.getClass().getDeclaredMethods()) {
             if (!method.isAnnotationPresent(Handles.class)) {
                 continue;
@@ -93,7 +90,7 @@ public class BaseParser {
     private class SAXHandler extends DefaultHandler {
         private Document doc;
         private final Deque<Element> elements = new LinkedList<>();
-        private StringBuilder textContent;
+        private final StringBuilder textBuffer = new StringBuilder();
 
         @Override
         public void startDocument() throws SAXException {
@@ -126,6 +123,8 @@ public class BaseParser {
                 }
 
                 elements.push(element);
+
+                textBuffer.setLength(0);
             }
         }
 
@@ -142,11 +141,11 @@ public class BaseParser {
 
             assert element.getTagName().equals(name);
 
-            if (null != textContent && 0 == element.getChildNodes().getLength()) {
-                element.setTextContent(textContent.toString().trim());
+            if (0 == element.getChildNodes().getLength()) {
+                element.setTextContent(textBuffer.toString().trim());
             }
 
-            textContent = null;
+            textBuffer.setLength(0);
 
             if (handlers.containsKey(name)) {
                 for (ElementHandler handler: handlers.get(name)) {
@@ -161,11 +160,7 @@ public class BaseParser {
         public void characters(final char[] buffer, final int start, final int length)
             throws SAXException {
             if (!elements.isEmpty()) {
-                if (null == textContent) {
-                    textContent = new StringBuilder();
-                }
-
-                textContent.append(buffer, start, length);
+                textBuffer.append(buffer, start, length);
             }
         }
     }
