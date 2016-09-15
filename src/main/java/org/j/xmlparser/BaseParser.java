@@ -56,7 +56,7 @@ class BaseParser {
     public void addHandler(final @NotNull Object handlerObj)
         throws NoSuchMethodException, IllegalAccessException {
 
-        final MethodHandles.Lookup lookup = MethodHandles.lookup();
+        final MethodHandles.Lookup lookup = MethodHandles.publicLookup();
 
         for (Method method : handlerObj.getClass().getDeclaredMethods()) {
             if (!method.isAnnotationPresent(Handles.class)) {
