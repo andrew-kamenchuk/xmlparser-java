@@ -2,7 +2,6 @@ package org.j.xmlparser;
 
 import javax.validation.constraints.NotNull;
 
-import org.j.xmlparser.annotations.Handles;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.Attributes;
@@ -15,10 +14,6 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import java.io.IOException;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import static java.lang.invoke.MethodType.methodType;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
@@ -32,6 +27,8 @@ class BaseParser {
 
     private Executor executor = Runnable::run;
 
+    private ErrorHandler errorHandler = Throwable::printStackTrace;
+
     public Executor setExecutor(final @NotNull Executor executor) {
         Objects.requireNonNull(executor);
 
@@ -39,6 +36,11 @@ class BaseParser {
         this.executor = executor;
 
         return prev;
+    }
+
+    public void setErrorHandler(final @NotNull ErrorHandler errorHandler) {
+        Objects.requireNonNull(errorHandler);
+        this.errorHandler = errorHandler;
     }
 
     public void addHandler(String tagName, final @NotNull ElementHandler handler) {
@@ -51,29 +53,6 @@ class BaseParser {
         }
 
         handlers.get(tagName).add(handler);
-    }
-
-    public void addHandler(final @NotNull Object handlerObj)
-        throws NoSuchMethodException, IllegalAccessException {
-
-        final MethodHandles.Lookup lookup = MethodHandles.publicLookup();
-
-        for (Method method : handlerObj.getClass().getDeclaredMethods()) {
-            if (!method.isAnnotationPresent(Handles.class)) {
-                continue;
-            }
-
-            final String tagName = method.getAnnotation(Handles.class).tag();
-
-            final String methodName = method.getName();
-
-            final MethodHandle mh = lookup
-                .findVirtual(handlerObj.getClass(), methodName, methodType(void.class, Element.class))
-                .bindTo(handlerObj);
-
-            addHandler(tagName, mh::invoke);
-        }
-
     }
 
     public void parse(final String uri) throws IOException, SAXException {
@@ -92,10 +71,11 @@ class BaseParser {
     @FunctionalInterface
     public interface ElementHandler {
         void handle(Element element) throws Throwable;
+    }
 
-        default void handleError(Throwable th) {
-            th.printStackTrace();
-        }
+    @FunctionalInterface
+    public interface ErrorHandler {
+        void handleError(Throwable throwable);
     }
 
     private class SAXHandler extends DefaultHandler {
@@ -164,7 +144,7 @@ class BaseParser {
                         try {
                             handler.handle(element);
                         } catch (Throwable throwable) {
-                            handler.handleError(throwable);
+                            errorHandler.handleError(throwable);
                         }
                     });
                 }
