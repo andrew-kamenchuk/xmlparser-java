@@ -1,7 +1,5 @@
 package org.j.xmlparser;
 
-import javax.validation.constraints.NotNull;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.Attributes;
@@ -29,7 +27,7 @@ class BaseParser {
 
     private ErrorHandler errorHandler = Throwable::printStackTrace;
 
-    public Executor setExecutor(final @NotNull Executor executor) {
+    public Executor setExecutor(final Executor executor) {
         Objects.requireNonNull(executor);
 
         final Executor prev = this.executor;
@@ -38,12 +36,12 @@ class BaseParser {
         return prev;
     }
 
-    public void setErrorHandler(final @NotNull ErrorHandler errorHandler) {
+    public void setErrorHandler(final ErrorHandler errorHandler) {
         Objects.requireNonNull(errorHandler);
         this.errorHandler = errorHandler;
     }
 
-    public void addHandler(String tagName, final @NotNull ElementHandler handler) {
+    public void addHandler(String tagName, final ElementHandler handler) {
         Objects.requireNonNull(handler);
 
         tagName = tagName.toLowerCase();

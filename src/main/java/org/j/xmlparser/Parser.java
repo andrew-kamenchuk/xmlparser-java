@@ -1,7 +1,5 @@
 package org.j.xmlparser;
 
-import javax.validation.constraints.NotNull;
-
 import org.xml.sax.SAXException;
 import org.w3c.dom.Element;
 
@@ -20,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Parser extends BaseParser {
 
-    public void addHandler(final @NotNull Object handlerObj)
+    public void addHandler(final Object handlerObj)
         throws NoSuchMethodException, IllegalAccessException {
 
         final MethodHandles.Lookup lookup = MethodHandles.publicLookup();
