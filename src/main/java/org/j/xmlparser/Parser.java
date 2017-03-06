@@ -8,13 +8,12 @@ import org.j.xmlparser.annotations.Handles;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import static java.lang.invoke.MethodType.methodType;
+
 import java.lang.reflect.Method;
 
 import java.io.IOException;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 public class Parser extends BaseParser {
 
@@ -28,7 +27,7 @@ public class Parser extends BaseParser {
                 continue;
             }
 
-            final String tagName = method.getAnnotation(Handles.class).tag();
+            final String tagName = method.getAnnotation(Handles.class).value();
 
             final String methodName = method.getName();
 
@@ -40,37 +39,21 @@ public class Parser extends BaseParser {
         }
     }
 
-    private boolean parseAndRestoreExecutor(final String uri, final ExecutorService executor)
-        throws IOException, SAXException {
-
+    public void parse(final String uri, final Executor executor) throws IOException, SAXException {
         final Executor prev = setExecutor(executor);
-
         parse(uri);
-
-        executor.shutdown();
-
-        boolean done = false;
-
-        try {
-            done = executor.awaitTermination(10L, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            executor.shutdownNow();
-        }
-
-        setExecutor(prev);
-        return done;
+        setExecutor(executor);
     }
 
-    public boolean parseFixedThreadPool(final String uri, final int nThreads)
-        throws IOException, SAXException {
-        return parseAndRestoreExecutor(uri, Executors.newFixedThreadPool(nThreads));
+    public void parseFixedThreadPool(final String uri, final int nThreads) throws IOException, SAXException {
+        parse(uri, Executors.newFixedThreadPool(nThreads));
     }
 
-    public boolean parseCachedThreadPool(final String uri) throws IOException, SAXException {
-        return parseAndRestoreExecutor(uri, Executors.newCachedThreadPool());
+    public void parseCachedThreadPool(final String uri) throws IOException, SAXException {
+        parse(uri, Executors.newCachedThreadPool());
     }
 
-    public boolean parseSingleThreadPool(final String uri) throws IOException, SAXException {
-        return parseAndRestoreExecutor(uri, Executors.newSingleThreadExecutor());
+    public void parseSingleThreadPool(final String uri) throws IOException, SAXException {
+        parse(uri, Executors.newSingleThreadExecutor());
     }
 }

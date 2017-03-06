@@ -25,7 +25,7 @@ class BaseParser {
 
     private Executor executor = Runnable::run;
 
-    private ErrorHandler errorHandler = Throwable::printStackTrace;
+    private ErrorHandler errorHandler = new ErrorHandler() {};
 
     public Executor setExecutor(final Executor executor) {
         Objects.requireNonNull(executor);
@@ -36,9 +36,13 @@ class BaseParser {
         return prev;
     }
 
-    public void setErrorHandler(final ErrorHandler errorHandler) {
+    public ErrorHandler setErrorHandler(final ErrorHandler errorHandler) {
         Objects.requireNonNull(errorHandler);
+
+        final ErrorHandler prev = this.errorHandler;
         this.errorHandler = errorHandler;
+
+        return prev;
     }
 
     public void addHandler(String tagName, final ElementHandler handler) {
@@ -63,17 +67,6 @@ class BaseParser {
         }
 
         parser.parse(uri, new SAXHandler());
-    }
-
-
-    @FunctionalInterface
-    public interface ElementHandler {
-        void handle(Element element) throws Throwable;
-    }
-
-    @FunctionalInterface
-    public interface ErrorHandler {
-        void handleError(Throwable throwable);
     }
 
     private class SAXHandler extends DefaultHandler {
@@ -142,7 +135,7 @@ class BaseParser {
                         try {
                             handler.handle(element);
                         } catch (Throwable throwable) {
-                            errorHandler.handleError(throwable);
+                            errorHandler.handle(throwable);
                         }
                     });
                 }
