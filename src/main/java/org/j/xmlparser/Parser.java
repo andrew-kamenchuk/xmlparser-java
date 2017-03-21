@@ -42,7 +42,7 @@ public class Parser extends BaseParser {
     public void parse(final String uri, final Executor executor) throws IOException, SAXException {
         final Executor prev = setExecutor(executor);
         parse(uri);
-        setExecutor(executor);
+        setExecutor(prev);
     }
 
     public void parseFixedThreadPool(final String uri, final int nThreads) throws IOException, SAXException {
