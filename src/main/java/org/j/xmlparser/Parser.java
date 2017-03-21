@@ -13,6 +13,7 @@ import java.lang.reflect.Method;
 
 import java.io.IOException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Parser extends BaseParser {
@@ -45,15 +46,22 @@ public class Parser extends BaseParser {
         setExecutor(prev);
     }
 
-    public void parseFixedThreadPool(final String uri, final int nThreads) throws IOException, SAXException {
-        parse(uri, Executors.newFixedThreadPool(nThreads));
+    private ExecutorService parseWithExecutorService(final String uri, final ExecutorService service) throws IOException, SAXException {
+        parse(uri, service);
+        service.shutdown();
+
+        return service;
     }
 
-    public void parseCachedThreadPool(final String uri) throws IOException, SAXException {
-        parse(uri, Executors.newCachedThreadPool());
+    public ExecutorService parseFixedThreadPool(final String uri, final int nThreads) throws IOException, SAXException {
+        return parseWithExecutorService(uri, Executors.newFixedThreadPool(nThreads));
     }
 
-    public void parseSingleThreadPool(final String uri) throws IOException, SAXException {
-        parse(uri, Executors.newSingleThreadExecutor());
+    public ExecutorService parseCachedThreadPool(final String uri) throws IOException, SAXException {
+        return parseWithExecutorService(uri, Executors.newCachedThreadPool());
+    }
+
+    public ExecutorService parseSingleThreadPool(final String uri) throws IOException, SAXException {
+        return parseWithExecutorService(uri, Executors.newSingleThreadExecutor());
     }
 }
